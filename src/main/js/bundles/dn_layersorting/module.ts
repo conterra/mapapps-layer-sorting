@@ -14,17 +14,8 @@
 /// limitations under the License.
 ///
 
-const i18n = {
-    root: {
-        bundleName: "Hello World",
-        bundleDescription: "This bundle prints Hello.",
-        hello: "Hello World"
-    },
-    de: true
-};
-
-export type Messages = (typeof i18n)["root"];
-export interface MessagesReference {
-    get: () => Messages
-}
-export default i18n;
+export { BundleSortingModel } from "./BundleSortingModel";
+export { BundleSortingController } from "./BundleSortingController";
+export { LayerSortingController } from "./controllers/LayerSortingController";
+export { MapConfigurationController } from "./controllers/MapConfigurationController";
+export { ConfigurationValidationController } from "./controllers/ConfigurationValidationController";

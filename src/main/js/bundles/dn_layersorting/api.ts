@@ -14,4 +14,19 @@
 /// limitations under the License.
 ///
 
-import "./Hello";
+export interface LayerConfig {
+    id: string;
+    newParentId?: string;
+    order?: number;
+}
+
+export interface LayerDefinition {
+    id: string;
+    title?: string;
+    type: 'layer' | 'group';
+}
+
+export interface ValidationResult {
+    valid: boolean;
+    errors: string[];
+}

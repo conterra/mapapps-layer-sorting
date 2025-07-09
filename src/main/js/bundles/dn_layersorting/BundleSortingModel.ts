@@ -14,25 +14,17 @@
 /// limitations under the License.
 ///
 
-interface PropertiesObject {
-    [key: string]: any;
+
+import { Mutable, properties } from "apprt-core/Mutable";
+
+export interface BundleSortingModelProperties {
+    showRemainingBundleContents: object;
+    bundleOrderConfiguration: object[]
 }
 
-export class Hello {
-    private msg: string;
-    _properties: PropertiesObject;
+export class BundleSortingModel extends Mutable { }
 
-    activate() {
-        this.msg = this._properties.message;
-    }
-
-    print() {
-        // eslint-disable-next-line no-alert
-        alert(this.getMessage());
-    }
-
-    getMessage() {
-        return this.msg;
-    }
-
-}
+properties(BundleSortingModel, {
+    showRemainingBundleContents: {},
+    bundleOrderConfiguration: []
+});

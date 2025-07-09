@@ -41,6 +41,24 @@
         ]
     },
     "bundles": {
+        "dn_layersorting": {
+            "Config": {
+                  "showRemainingBundleContents": {
+                    "domain-sample_1": true,
+                    "domain-sample_2": true
+                },
+                "bundleOrderConfiguration": [
+                    {
+                        "id": "group1_new"
+                    },
+                    {
+                        "id": "layer_domain_1",
+                        "newParentId": "group1_new",
+                        "order": 1
+                    }
+                ]
+            }
+        },
         "agssearch": {
             "AutoStoreRegistration": {
                 "componentEnabled": true

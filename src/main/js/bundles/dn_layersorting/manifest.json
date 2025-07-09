@@ -1,0 +1,35 @@
+{
+    "name": "dn_layersorting",
+    "version": "1.0.0-SNAPSHOT",
+    "dependencies": {
+        "esri": "^4.15.0",
+        "apprt-core": "^4.15.0"
+    },
+    "main": "",
+    "i18n": [],
+    "components": [
+        {
+            "name": "Config",
+            "impl": "BundleSortingModel",
+            "provides": "dn_layersorting.BundleSortingModel",
+            "propertiesConstructor": true,
+            "properties": {
+                "showRemainingBundleContents": {},
+                "bundleOrderConfiguration": []
+            }
+        },
+        {
+            "name": "BundleSortingController",
+            "references": [
+                {
+                    "name": "_model",
+                    "providing": "dn_layersorting.BundleSortingModel"
+                },
+                {
+                    "name": "_mapWidgetModel",
+                    "providing": "map-widget.MapWidgetModel"
+                }
+            ]
+        }
+    ]
+}
