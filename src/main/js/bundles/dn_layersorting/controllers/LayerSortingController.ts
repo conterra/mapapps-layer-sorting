@@ -19,14 +19,24 @@ import GroupLayer from "esri/layers/GroupLayer";
 import type { InjectedReference } from "apprt-core/InjectedReference";
 import type { LayerConfig } from "../api";
 import type { MapWidgetModel } from "map-widget/api";
+import type { LogNotificationService } from "apprt/api";
 
 export class LayerSortingController {
     private _mapWidgetModel: InjectedReference<MapWidgetModel>;
     private _config: LayerConfig[];
+    private _logService: InjectedReference<LogNotificationService>;
+    private successNotification: string;
 
-    constructor(_mapWidgetModel: InjectedReference<MapWidgetModel>, config: LayerConfig[]) {
+    constructor(
+        _mapWidgetModel: InjectedReference<MapWidgetModel>,
+        config: LayerConfig[],
+        logService: InjectedReference<LogNotificationService>,
+        successNotification: string
+    ) {
         this._mapWidgetModel = _mapWidgetModel;
         this._config = config;
+        this._logService = logService;
+        this.successNotification = successNotification;
     }
 
     async restructureLayers(config: LayerConfig[]): Promise<void> {
@@ -96,6 +106,7 @@ export class LayerSortingController {
         for (const layer of rootLayers) {
             map.add(layer);
         }
+        this._logService?.info(this.successNotification);
     }
 
     private getView(): Promise<__esri.MapView | __esri.SceneView | undefined> {

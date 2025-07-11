@@ -3,10 +3,11 @@
     "version": "1.0.0-SNAPSHOT",
     "dependencies": {
         "esri": "^4.15.0",
-        "apprt-core": "^4.15.0"
+        "apprt-core": "^4.15.0",
+        "notifier": "^4.15.0"
     },
     "main": "",
-    "i18n": [],
+    "i18n": ["bundle"],
     "components": [
         {
             "name": "Config",
@@ -28,6 +29,10 @@
                 {
                     "name": "_mapWidgetModel",
                     "providing": "map-widget.MapWidgetModel"
+                },
+                {
+                    "name": "_logService",
+                    "providing": "ct.framework.api.LogService"
                 }
             ]
         }

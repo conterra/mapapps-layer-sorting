@@ -55,7 +55,11 @@
                     },
                     {
                         "id": "koeln2",
-                        "order": 1
+                        "order": 7
+                    },
+                    {
+                        "id": "koeln11",
+                        "order": 7
                     },
                     {
                         "id": "koeln3",
