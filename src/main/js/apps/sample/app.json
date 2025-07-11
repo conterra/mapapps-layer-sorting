@@ -54,7 +54,7 @@
                     "domain-sample_2": true
                 },
                 "bundleOrderConfiguration": [
-                
+
                     {
                         "id": "koeln2",
                         "order": 7
@@ -66,8 +66,11 @@
                     {
                         "id": "group2_new",
                         "order": 0,
-                        //hier layer id
-                        "newParentId": "layer_domain_1"
+                        "newParentId": "koeln2"
+                    },
+                    {
+                        "id": "layer_domain_1",
+                        "newParentId": "group2_new"
                     }
                 ]
             }

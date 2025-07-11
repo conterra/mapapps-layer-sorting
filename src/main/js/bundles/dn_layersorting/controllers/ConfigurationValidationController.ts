@@ -41,11 +41,13 @@ export class ConfigurationValidationController {
 
         for (const entry of this.config) {
 
-            if (entry.newParentId && !this.idSet.has(entry.newParentId)) {
+            if (entry.newParentId &&
+                (!availableLayerIds.has(entry.newParentId) && !this.idSet.has(entry.newParentId))
+            ) {
                 errors.push(`Invalid parent reference: ${entry.id} refers to unknown parent ${entry.newParentId}`);
             }
 
-            if (!availableLayerIds.has(entry.id) && !this.config.some(c => c.id === entry.id && !c.newParentId)) {
+            if (!availableLayerIds.has(entry.id) && !this.idSet.has(entry.id)) {
                 errors.push(`ID ${entry.id} does not match any available layer.`);
             }
 
