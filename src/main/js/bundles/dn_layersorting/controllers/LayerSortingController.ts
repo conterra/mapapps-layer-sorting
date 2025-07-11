@@ -76,7 +76,7 @@ export class LayerSortingController {
                         children.sort((a, b) => {
                             const orderA = config.find(c => c.id === a.id)?.order ?? 0;
                             const orderB = config.find(c => c.id === b.id)?.order ?? 0;
-                            return orderA - orderB;
+                            return orderB - orderA;
                         })
                     );
                 }
@@ -87,6 +87,12 @@ export class LayerSortingController {
 
         // Map säubern und neue Struktur einfügen
         map.removeAll();
+        // Sort rootLayers by config order before adding
+        rootLayers.sort((a, b) => {
+            const orderA = config.find(c => c.id === a.id)?.order ?? 0;
+            const orderB = config.find(c => c.id === b.id)?.order ?? 0;
+            return orderB - orderA;
+        });
         for (const layer of rootLayers) {
             map.add(layer);
         }

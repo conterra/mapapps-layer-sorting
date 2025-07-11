@@ -34,7 +34,8 @@
             "theme-autumn",
             "toc",
             "toolset",
-            "dn_imprintprivacy"
+            "dn_imprintprivacy",
+            "dn_layersorting"
         ],
         "i18n": [
             "bundle"
@@ -43,18 +44,22 @@
     "bundles": {
         "dn_layersorting": {
             "Config": {
-                  "showRemainingBundleContents": {
+                "showRemainingBundleContents": {
                     "domain-sample_1": true,
                     "domain-sample_2": true
                 },
                 "bundleOrderConfiguration": [
                     {
-                        "id": "group1_new"
+                        "id": "group1_new",
+                        "order": 4
                     },
                     {
-                        "id": "layer_domain_1",
-                        "newParentId": "group1_new",
+                        "id": "koeln2",
                         "order": 1
+                    },
+                    {
+                        "id": "koeln3",
+                        "order": 0
                     }
                 ]
             }
