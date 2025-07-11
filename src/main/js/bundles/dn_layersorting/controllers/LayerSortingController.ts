@@ -53,17 +53,14 @@ export class LayerSortingController {
         const idToGroup = new Map<string, __esri.GroupLayer>();
         const rootLayers: __esri.Layer[] = [];
 
-        // Vorab: Mapping Layer-IDs zu tatsächlichen Layer-Objekten
         for (const layer of availableLayers) {
             idToLayer.set(layer.id, layer);
         }
 
-        // Erzeuge Gruppenstrukturen und fülle diese
         for (const entry of config) {
             let layer = idToLayer.get(entry.id);
 
             if (!layer) {
-                // Neue Gruppe erzeugen
                 layer = new GroupLayer({
                     id: entry.id,
                     title: entry.id,
@@ -75,7 +72,6 @@ export class LayerSortingController {
                 idToGroup.set(entry.id, layer as __esri.GroupLayer);
             }
 
-            // Gruppierung zuweisen
             if (entry.newParentId) {
                 const parentGroup = idToGroup.get(entry.newParentId);
                 if (parentGroup) {
@@ -94,10 +90,8 @@ export class LayerSortingController {
                 rootLayers.push(layer);
             }
         }
-
-        // Map säubern und neue Struktur einfügen
         map.removeAll();
-        // Sort rootLayers by config order before adding
+
         rootLayers.sort((a, b) => {
             const orderA = config.find(c => c.id === a.id)?.order ?? 0;
             const orderB = config.find(c => c.id === b.id)?.order ?? 0;

@@ -1,0 +1,32 @@
+{
+    "name": "domain-sample_2",
+    "version": "1.0.0",
+    "dependencies": {
+        "domains-system": "^4.15.0"
+    },
+    "main": "",
+    "layer": "",
+    "i18n": [],
+    "domain-config": {
+        "map-layers": [
+            {
+                "id": "grouplayer_2",
+                "title": "Sample Group 2",
+                "type": "GROUP",
+                "layers": [
+                    {
+                        "title": "Bundeslaender",
+                        "type": "AGS_FEATURE",
+                        "url": "https://services.conterra.de/arcgis/rest/services/common/grenzen/FeatureServer/2"
+                    },
+                    {
+                        "title": "Kreise",
+                        "type": "AGS_FEATURE",
+                        "url": "https://services.conterra.de/arcgis/rest/services/common/grenzen/FeatureServer/1",
+                        "definitionExpression": "land_nr = 5"
+                    }
+                ]
+            }
+        ]
+    }
+}

@@ -47,6 +47,7 @@ export class BundleSortingController {
             const validationResult = this.validateConfiguration(modelConfig, mapConfig);
 
             if (!validationResult.valid) {
+                console.error("Configuration validation failed:", validationResult.errors);
                 logService.warn(messages.errorNotification);
                 return;
             }

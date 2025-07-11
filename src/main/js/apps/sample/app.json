@@ -35,7 +35,11 @@
             "toc",
             "toolset",
             "dn_imprintprivacy",
-            "dn_layersorting"
+            "dn_layersorting",
+            "domain-sample_1",
+            "domain-sample_2",
+            "domain-system",
+            "console"
         ],
         "i18n": [
             "bundle"
@@ -44,26 +48,26 @@
     "bundles": {
         "dn_layersorting": {
             "Config": {
+                //zeig die layer an die hier in dem bundle sind (name des budnles)
                 "showRemainingBundleContents": {
                     "domain-sample_1": true,
                     "domain-sample_2": true
                 },
                 "bundleOrderConfiguration": [
-                    {
-                        "id": "group1_new",
-                        "order": 4
-                    },
+                
                     {
                         "id": "koeln2",
                         "order": 7
                     },
                     {
                         "id": "koeln11",
-                        "order": 7
+                        "order": 8
                     },
                     {
-                        "id": "koeln3",
-                        "order": 0
+                        "id": "group2_new",
+                        "order": 0,
+                        //hier layer id
+                        "newParentId": "layer_domain_1"
                     }
                 ]
             }

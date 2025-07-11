@@ -30,10 +30,8 @@ export class ConfigurationValidationController {
     public validate(): ValidationResult {
         const errors: string[] = [];
 
-        // Schritt 1: Alle bekannten Layer-IDs erfassen
         const availableLayerIds = new Set(this.availableLayers.map(l => l.id));
 
-        // Schritt 2: Eindeutigkeit der Konfigurations-IDs prüfen
         for (const entry of this.config) {
             if (this.idSet.has(entry.id)) {
                 errors.push(`Duplicate ID found: ${entry.id}`);
@@ -41,19 +39,16 @@ export class ConfigurationValidationController {
             this.idSet.add(entry.id);
         }
 
-        // Schritt 3: Validität der Referenzen prüfen
         for (const entry of this.config) {
-            // Parent muss existieren
+
             if (entry.newParentId && !this.idSet.has(entry.newParentId)) {
                 errors.push(`Invalid parent reference: ${entry.id} refers to unknown parent ${entry.newParentId}`);
             }
 
-            // Konfiguration muss existierenden Layer referenzieren oder neue Gruppe sein
             if (!availableLayerIds.has(entry.id) && !this.config.some(c => c.id === entry.id && !c.newParentId)) {
                 errors.push(`ID ${entry.id} does not match any available layer.`);
             }
 
-            // Baum für Zyklusprüfung vorbereiten
             if (entry.newParentId) {
                 const children = this.parentMap.get(entry.newParentId) || [];
                 children.push(entry.id);
@@ -61,7 +56,6 @@ export class ConfigurationValidationController {
             }
         }
 
-        // Schritt 4: Zyklusprüfung
         const visited = new Set<string>();
         const stack = new Set<string>();
 

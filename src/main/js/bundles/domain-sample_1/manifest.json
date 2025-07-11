@@ -1,0 +1,21 @@
+{
+    "name": "domain-sample_1",
+    "version": "1.0.0",
+    "dependencies": {
+        "domains-system": "^4.15.0"
+    },
+    "main": "",
+    "layer": "",
+    "i18n": [],
+    "domain-config": {
+        "map-layers": [
+            {
+                "id": "layer_domain_1",
+                "title": "schulen",
+                "type": "AGS_FEATURE",
+                "url": "https://services2.arcgis.com/jUpNdisbWqRpMo35/arcgis/rest/services/Hamburg_Schulen/FeatureServer/0"
+          
+            }
+        ]
+    }
+}
