@@ -48,7 +48,6 @@
     "bundles": {
         "dn_layersorting": {
             "Config": {
-                //zeig die layer an die hier in dem bundle sind (name des budnles)
                 "showRemainingBundleContents": {
                     "domain-sample_1": true,
                     "domain-sample_2": true
@@ -60,7 +59,7 @@
                         "order": 7
                     },
                     {
-                        "id": "koeln11",
+                        "id": "koeln1",
                         "order": 8
                     },
                     {

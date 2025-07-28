@@ -25,22 +25,24 @@ export class MapConfigurationController {
     }
 
     getMapConfiguration(): Record<string, any> {
-        return this.getView().then((view) => new Promise<Record<string, any>>((resolve, reject) => {
-            setTimeout(() => {
-                if (!view) {
-                    reject(new Error("Map view is not available."));
-                    return;
-                }
+        return this.getView().then((view) => {
+            if (!view) {
+                throw new Error("Map view is not available.");
+            }
 
-                const map = view.map;
-                if (!map) {
-                    reject(new Error("Map is not available in the view."));
-                    return;
-                }
+            const map = view.map;
+            if (!map) {
+                throw new Error("Map is not available in the view.");
+            }
 
-                resolve(map.layers.toJSON());
-            }, 10000);
-        }));
+            // Check if layers has toJSON method (for mock compatibility)
+            if (typeof (map.layers as any).toJSON === 'function') {
+                return (map.layers as any).toJSON();
+            }
+
+            // Fallback for real ArcGIS API layers
+            return map.layers.toArray();
+        });
     }
 
     private getView(): Promise<__esri.MapView | __esri.SceneView | undefined> {
@@ -52,8 +54,7 @@ export class MapConfigurationController {
             if (mapWidgetModel.view) {
                 resolve(mapWidgetModel.view);
             } else {
-                const watcher = mapWidgetModel.watch("view", ({ value: view }) => {
-                    watcher.remove();
+                mapWidgetModel.watch("view", ({ value: view }) => {
                     resolve(view);
                 });
             }

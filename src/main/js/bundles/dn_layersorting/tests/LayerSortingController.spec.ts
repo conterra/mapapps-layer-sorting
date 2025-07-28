@@ -32,50 +32,251 @@ describe('LayerSortingController', () => {
         };
     }
 
-    it('should sort root layers by ascending order', async () => {
-        // Mock layers
-        const layerA = { id: 'group1_new' };
-        const layerB = { id: 'koeln2' };
-        const layerC = { id: 'koeln3' };
-        const mockLayers = [layerA, layerB, layerC];
-        const mockMap = {
-            layers: {
-                flatten: () => mockLayers
+    function createMockCollection(items: any[] = []): any {
+        return {
+            _items: [...items],
+            flatten: function(fn: any) {
+                const result: any[] = [];
+                for (const item of this._items) {
+                    result.push(item);
+                    const children = fn ? fn(item) : null;
+                    if (children && children._items) {
+                        result.push(...children._items);
+                    }
+                }
+                return createMockCollection(result);
             },
-            removeAll: () => {},
-            add: function(layer: { id: string }) {
-                (this._added as string[]).push(layer.id);
+            toArray: function() {
+                return [...this._items];
             },
-            _added: [] as string[]
+            remove: function(layer: any) {
+                const index = this._items.findIndex((item: any) => item.id === layer.id);
+                if (index > -1) {
+                    this._items.splice(index, 1);
+                }
+            },
+            removeAll: function() {
+                this._items.length = 0;
+            },
+            add: function(layer: any) {
+                this._items.push(layer);
+            },
+            addMany: function(layers: any[]) {
+                this._items.push(...layers);
+            },
+            includes: function(layer: any) {
+                return this._items.some((item: any) => item.id === layer.id);
+            }
         };
+    }
+
+    function createMockLayer(id: string, type: string = 'layer', parent?: any): any {
+        const layer: any = {
+            id,
+            type,
+            parent
+        };
+
+        if (type === 'group') {
+            layer.layers = createMockCollection();
+        }
+
+        return layer;
+    }
+
+    it('should sort root layers by descending order (Esri API convention)', async () => {
+        // Mock layers
+        const layerA = createMockLayer('group1_new');
+        const layerB = createMockLayer('koeln2');
+        const layerC = createMockLayer('koeln3');
+
+        const mockLayers = createMockCollection([layerA, layerB, layerC]);
+        const mockMap = {
+            layers: mockLayers,
+            add: function(layer: any) {
+                this.layers.add(layer);
+            },
+            remove: function(layer: any) {
+                this.layers.remove(layer);
+            }
+        };
+
         const mockView = { map: mockMap };
-        const config: { id: string; order: number }[] = [
+        const config = [
             { id: 'group1_new', order: 4 },
             { id: 'koeln2', order: 1 },
             { id: 'koeln3', order: 0 }
         ];
-        // Provide dummy arguments for LayerSortingController constructor
-        const controller = new LayerSortingController(createMockMapWidgetModel(mockView), config, undefined as any, undefined as any);
+
+        const controller = new LayerSortingController(
+            createMockMapWidgetModel(mockView), config, undefined as any, "Success");
+
         await controller.restructureLayers(config);
-        expect(mockMap._added).to.deep.equal(['koeln3', 'koeln2', 'group1_new']);
+
+        // Check that layers are sorted in descending order (higher order first)
+        const layerOrder = mockMap.layers.toArray().map((l: any) => l.id);
+        expect(layerOrder).to.deep.equal(['group1_new', 'koeln2', 'koeln3']);
     });
 
     it('should handle empty layers gracefully', async () => {
+        const mockLayers = createMockCollection([]);
         const mockMap = {
-            layers: {
-                flatten: () => []
+            layers: mockLayers,
+            add: function(layer: any) {
+                this.layers.add(layer);
             },
-            removeAll: () => {},
-            add: function(layer: { id: string }) {
-                (this._added as string[]).push(layer.id);
-            },
-            _added: [] as string[]
+            remove: function(layer: any) {
+                this.layers.remove(layer);
+            }
         };
+
         const mockView = { map: mockMap };
-        const config: { id: string; order?: number }[] = [];
-        // Provide dummy arguments for LayerSortingController constructor
-        const controller = new LayerSortingController(createMockMapWidgetModel(mockView), config, undefined as any, undefined as any);
+        const config: any[] = [];
+
+        const controller = new LayerSortingController(
+            createMockMapWidgetModel(mockView), config, undefined as any, "Success");
+
         await controller.restructureLayers(config);
-        expect(mockMap._added).to.deep.equal([]);
+
+        expect(mockMap.layers.toArray()).to.deep.equal([]);
+    });
+
+    it('should create missing layers as group layers', async () => {
+        const mockLayers = createMockCollection([]);
+        const mockMap = {
+            layers: mockLayers,
+            add: function(layer: any) {
+                this.layers.add(layer);
+            },
+            remove: function(layer: any) {
+                this.layers.remove(layer);
+            }
+        };
+
+        const mockView = { map: mockMap };
+        const config = [
+            { id: 'newlayer', order: 1 }
+        ];
+
+        const controller = new LayerSortingController(
+            createMockMapWidgetModel(mockView), config, undefined as any, "Success");
+
+        await controller.restructureLayers(config);
+
+        const addedLayers = mockMap.layers.toArray();
+        expect(addedLayers).to.have.length(1);
+        expect(addedLayers[0].id).to.equal('newlayer');
+        expect(addedLayers[0].type).to.equal('group');
+    });
+
+    it('should handle parent-child relationships correctly', async () => {
+        const parentGroup = createMockLayer('parentgroup', 'group');
+        const childLayer = createMockLayer('childlayer');
+
+        const mockLayers = createMockCollection([parentGroup, childLayer]);
+        const mockMap = {
+            layers: mockLayers,
+            add: function(layer: any) {
+                this.layers.add(layer);
+            },
+            remove: function(layer: any) {
+                this.layers.remove(layer);
+            }
+        };
+
+        const mockView = { map: mockMap };
+        const config = [
+            { id: 'parentgroup', order: 0 },
+            { id: 'childlayer', newParentId: 'parentgroup', order: 1 }
+        ];
+
+        const controller = new LayerSortingController(
+            createMockMapWidgetModel(mockView), config, undefined as any, "Success");
+
+        await controller.restructureLayers(config);
+
+        // Parent should be in root layers
+        const rootLayers = mockMap.layers.toArray();
+        expect(rootLayers.some((l: any) => l.id === 'parentgroup')).to.equal(true);
+
+        // Child should be in parent's layers collection
+        const childrenInParent = parentGroup.layers.toArray();
+        expect(childrenInParent.some((l: any) => l.id === 'childlayer')).to.equal(true);
+    });
+
+    it('should create missing parent groups automatically', async () => {
+        const childLayer = createMockLayer('childlayer');
+
+        const mockLayers = createMockCollection([childLayer]);
+        const mockMap = {
+            layers: mockLayers,
+            add: function(layer: any) {
+                this.layers.add(layer);
+            },
+            remove: function(layer: any) {
+                this.layers.remove(layer);
+            }
+        };
+
+        const mockView = { map: mockMap };
+        const config = [
+            { id: 'childlayer', newParentId: 'missingparent', order: 1 }
+        ];
+
+        const controller = new LayerSortingController(
+            createMockMapWidgetModel(mockView), config, undefined as any, "Success");
+
+        await controller.restructureLayers(config);
+
+        // The missing parent should be created and added to root
+        const rootLayers = mockMap.layers.toArray();
+        const createdParent = rootLayers.find((l: any) => l.id === 'missingparent');
+        expect(createdParent).to.not.equal(undefined);
+        expect(createdParent.type).to.equal('group');
+    });
+
+    it('should handle complex nested hierarchies with ordering', async () => {
+        const groupA = createMockLayer('groupA', 'group');
+        const groupB = createMockLayer('groupB', 'group');
+        const layer1 = createMockLayer('layer1');
+        const layer2 = createMockLayer('layer2');
+        const layer3 = createMockLayer('layer3');
+
+        const mockLayers = createMockCollection([groupA, groupB, layer1, layer2, layer3]);
+        const mockMap = {
+            layers: mockLayers,
+            add: function(layer: any) {
+                this.layers.add(layer);
+            },
+            remove: function(layer: any) {
+                this.layers.remove(layer);
+            }
+        };
+
+        const mockView = { map: mockMap };
+        const config = [
+            { id: 'groupA', order: 3 },
+            { id: 'groupB', order: 1 },
+            { id: 'layer1', newParentId: 'groupA', order: 2 },
+            { id: 'layer2', newParentId: 'groupA', order: 1 },
+            { id: 'layer3', newParentId: 'groupB', order: 1 }
+        ];
+
+        const controller = new LayerSortingController(
+            createMockMapWidgetModel(mockView), config, undefined as any, "Success");
+
+        await controller.restructureLayers(config);
+
+        // Check root layer ordering (descending)
+        const rootLayers = mockMap.layers.toArray();
+        const rootIds = rootLayers.map((l: any) => l.id);
+        expect(rootIds).to.deep.equal(['groupA', 'groupB']);
+
+        // Check children ordering within groups (descending)
+        const groupAChildren = groupA.layers.toArray().map((l: any) => l.id);
+        expect(groupAChildren).to.deep.equal(['layer1', 'layer2']);
+
+        const groupBChildren = groupB.layers.toArray().map((l: any) => l.id);
+        expect(groupBChildren).to.deep.equal(['layer3']);
     });
 });

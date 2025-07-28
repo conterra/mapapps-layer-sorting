@@ -53,7 +53,11 @@ export class BundleSortingController {
             }
 
             const layerSortingController = new LayerSortingController(
-                mapWidgetModel, modelConfig, logService, messages.successNotification
+                mapWidgetModel,
+                modelConfig,
+                logService,
+                messages.successNotification,
+                model.showRemainingBundleContents
             );
             layerSortingController.restructureLayers(modelConfig);
         });

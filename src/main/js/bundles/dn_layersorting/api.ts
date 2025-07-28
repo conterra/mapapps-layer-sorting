@@ -24,6 +24,11 @@ export interface LayerDefinition {
     id: string;
     title?: string;
     type: 'layer' | 'group';
+    bundleId?: string; // Added to track which bundle a layer comes from
+}
+
+export interface DomainBundleConfig {
+    [bundleId: string]: boolean;
 }
 
 export interface ValidationResult {

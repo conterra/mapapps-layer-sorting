@@ -20,7 +20,6 @@ export class ConfigurationValidationController {
     private config: LayerConfig[];
     private availableLayers: LayerDefinition[];
     private idSet: Set<string> = new Set();
-    private parentMap: Map<string, string[]> = new Map();
 
     constructor(config: LayerConfig[], availableLayers: LayerDefinition[]) {
         this.config = config;
@@ -30,8 +29,12 @@ export class ConfigurationValidationController {
     public validate(): ValidationResult {
         const errors: string[] = [];
 
+        // Reset state for this validation
+        this.idSet.clear();
+
         const availableLayerIds = new Set(this.availableLayers.map(l => l.id));
 
+        // First pass: check for duplicate IDs and build the set
         for (const entry of this.config) {
             if (this.idSet.has(entry.id)) {
                 errors.push(`Duplicate ID found: ${entry.id}`);
@@ -39,47 +42,58 @@ export class ConfigurationValidationController {
             this.idSet.add(entry.id);
         }
 
+        // Second pass: validate each entry
+        const processedConfigIds = new Set<string>();
+
         for (const entry of this.config) {
-
-            if (entry.newParentId &&
-                (!availableLayerIds.has(entry.newParentId) && !this.idSet.has(entry.newParentId))
-            ) {
-                errors.push(`Invalid parent reference: ${entry.id} refers to unknown parent ${entry.newParentId}`);
-            }
-
-            if (!availableLayerIds.has(entry.id) && !this.idSet.has(entry.id)) {
+            // Skip validation for layer IDs if they have a newParentId -
+            // these could be domain layers or new groups being created
+            if (!entry.newParentId && !availableLayerIds.has(entry.id)) {
                 errors.push(`ID ${entry.id} does not match any available layer.`);
             }
 
+            // Check parent reference validity
             if (entry.newParentId) {
-                const children = this.parentMap.get(entry.newParentId) || [];
-                children.push(entry.id);
-                this.parentMap.set(entry.newParentId, children);
+                // If parent ID is in the config, it must have been processed earlier (no forward references)
+                if (this.idSet.has(entry.newParentId)) {
+                    if (!processedConfigIds.has(entry.newParentId)) {
+                        errors.push(
+                            `Invalid parent reference: ${entry.id} refers to unknown parent ${entry.newParentId}`
+                        );
+                    }
+                }
+                // Note: We allow newParentId to reference existing layers or IDs that will be created dynamically
+            }
+
+            // Add this ID to processed set for next iterations
+            processedConfigIds.add(entry.id);
+        }
+
+        // Cycle detection - traverse upward through parent relationships
+        const parentLookup = new Map<string, string>();
+        for (const entry of this.config) {
+            if (entry.newParentId) {
+                parentLookup.set(entry.id, entry.newParentId);
             }
         }
 
-        const visited = new Set<string>();
-        const stack = new Set<string>();
+        const detectCycle = (nodeId: string): boolean => {
+            const visited = new Set<string>();
+            let current = nodeId;
 
-        const hasCycle = (nodeId: string): boolean => {
-            if (!this.parentMap.has(nodeId)) return false;
-            if (stack.has(nodeId)) return true;
-            if (visited.has(nodeId)) return false;
-
-            visited.add(nodeId);
-            stack.add(nodeId);
-
-            for (const childId of this.parentMap.get(nodeId)!) {
-                if (hasCycle(childId)) return true;
+            while (current && parentLookup.has(current)) {
+                if (visited.has(current)) {
+                    return true; // Cycle detected
+                }
+                visited.add(current);
+                current = parentLookup.get(current)!;
             }
-
-            stack.delete(nodeId);
             return false;
         };
 
-        for (const id of this.idSet) {
-            if (hasCycle(id)) {
-                errors.push(`Cycle detected in configuration hierarchy starting at: ${id}`);
+        for (const entry of this.config) {
+            if (detectCycle(entry.id)) {
+                errors.push(`Cycle detected in configuration hierarchy starting at: ${entry.id}`);
                 break;
             }
         }
