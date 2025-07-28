@@ -18,14 +18,19 @@ import { expect } from "chai";
 import { MapConfigurationController } from '../controllers/MapConfigurationController';
 
 describe('MapConfigurationController', () => {
-    function createMockMapWidgetModel(view?: any) {
+    function createMockMapWidgetModel(view?: any): any {
         return {
             view,
             watch: (prop: string, cb: any) => {
                 // Simulate watcher
-                setTimeout(() => cb({ value: view }), 10);
+                // Always trigger callback immediately for tests
+                cb({ value: view });
                 return { remove: () => {} };
-            }
+            },
+            $super: () => {},
+            get: () => {},
+            set: () => {},
+            _mutableMembers: {}
         };
     }
 
@@ -45,7 +50,7 @@ describe('MapConfigurationController', () => {
             await controller.getMapConfiguration();
             throw new Error('Should have thrown');
         } catch (e) {
-            expect(e.message).to.equal('Map view is not available.');
+            expect((e as Error).message).to.equal('Map view is not available.');
         }
     });
 
@@ -56,7 +61,7 @@ describe('MapConfigurationController', () => {
             await controller.getMapConfiguration();
             throw new Error('Should have thrown');
         } catch (e) {
-            expect(e.message).to.equal('Map is not available in the view.');
+            expect((e as Error).message).to.equal('Map is not available in the view.');
         }
     });
 });

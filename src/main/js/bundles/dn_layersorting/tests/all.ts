@@ -14,4 +14,6 @@
 /// limitations under the License.
 ///
 
+import "./LayerSortingController.spec";
+import "./MapConfigurationController.spec";
 import "./ConfigurationValidationController.spec";
