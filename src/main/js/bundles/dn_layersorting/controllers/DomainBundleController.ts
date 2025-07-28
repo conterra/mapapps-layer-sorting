@@ -53,39 +53,90 @@ export class DomainBundleController {
     }
 
     /**
-     * Filters out layers from domain bundles that should not be shown
-     * based on the showRemainingBundleContents configuration
+     * Sets up watchers to monitor and filter domain bundle layers as they are added to the map
      */
-    filterLayersBasedOnBundleConfig(
-        layers: __esri.Collection<__esri.Layer>,
-        sortedLayerIds: string[]
-    ): __esri.Layer[] {
-        const allLayers = this.getFlattenLayers(layers).toArray();
-        const layersToKeep: __esri.Layer[] = [];
+    setupLayerFiltering(map: __esri.Map, sortedLayerIds: string[]): void {
+        // Initial cleanup of existing layers
+        this.removeFilteredLayersFromMap(map, sortedLayerIds);
 
-        for (const layer of allLayers) {
+        // Watch for new layers being added and filter them
+        map.layers.on("after-add", (event) => {
+            const addedLayer = event.item;
+            this.checkAndRemoveLayer(addedLayer, sortedLayerIds);
+
+            // Also check if it's a group layer with nested layers
+            if (addedLayer.type === 'group') {
+                const groupLayer = addedLayer as __esri.GroupLayer;
+                groupLayer.layers.forEach(nestedLayer => {
+                    this.checkAndRemoveLayer(nestedLayer, sortedLayerIds);
+                });
+
+                // Watch for layers added to this group
+                groupLayer.layers.on("after-add", (nestedEvent) => {
+                    this.checkAndRemoveLayer(nestedEvent.item, sortedLayerIds);
+                });
+            }
+        });
+    }
+
+    /**
+     * Removes layers from the map that should be filtered out based on bundle configuration
+     */
+    removeFilteredLayersFromMap(map: __esri.Map, sortedLayerIds: string[]): void {
+        const layersToRemove: __esri.Layer[] = [];
+
+        // Get all layers (flattened) to check each one
+        const allLayers = this.getFlattenLayers(map.layers);
+
+        allLayers.forEach(layer => {
             const bundleId = this.getBundleIdFromLayer(layer);
 
-            // If layer is not from a domain bundle, keep it
-            if (!bundleId || !this._domainBundles.has(bundleId)) {
-                layersToKeep.push(layer);
-                continue;
+            // If layer is from a domain bundle
+            if (bundleId && this._domainBundles.has(bundleId)) {
+                // If layer is not explicitly sorted and remaining content should not be shown
+                if (!sortedLayerIds.includes(layer.id) &&
+                    this._showRemainingBundleContents[bundleId] !== true) {
+                    layersToRemove.push(layer);
+                }
             }
+        });
 
-            // If layer is explicitly sorted, keep it
-            if (sortedLayerIds.includes(layer.id)) {
-                layersToKeep.push(layer);
-                continue;
-            }
-
-            // If remaining content should be shown for this bundle, keep it
-            if (this._showRemainingBundleContents[bundleId] === true) {
-                layersToKeep.push(layer);
-            }
-            // Otherwise, filter it out (don't add to layersToKeep)
+        // Remove the filtered layers from their parent collections
+        for (const layer of layersToRemove) {
+            this.removeLayerFromMap(layer, map);
         }
+    }
 
-        return layersToKeep;
+    /**
+     * Recursively removes a layer from the map, handling nested group layers
+     */
+    private removeLayerFromMap(layer: __esri.Layer, map: __esri.Map): void {
+        if (layer.parent && 'layers' in layer.parent) {
+            // Layer is in a group layer
+            (layer.parent as __esri.GroupLayer).layers.remove(layer);
+        } else {
+            // Layer is at root level
+            map.layers.remove(layer);
+        }
+    }
+
+    /**
+     * Checks if a layer should be removed and removes it if necessary
+     */
+    private checkAndRemoveLayer(layer: __esri.Layer, sortedLayerIds: string[]): void {
+        const bundleId = this.getBundleIdFromLayer(layer);
+
+        if (bundleId && this._domainBundles.has(bundleId)) {
+            // If layer is not explicitly sorted and remaining content should not be shown
+            if (!sortedLayerIds.includes(layer.id) &&
+                this._showRemainingBundleContents[bundleId] !== true) {
+
+                // Small delay to ensure the layer is fully added before removing
+                setTimeout(() => {
+                    this.removeLayerFromMap(layer, layer.parent as __esri.Map);
+                }, 100);
+            }
+        }
     }
 
     /**

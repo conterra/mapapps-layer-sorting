@@ -59,20 +59,9 @@ export class LayerSortingController {
         // Get sorted layer IDs from config for domain bundle filtering
         const sortedLayerIds = config.map(entry => entry.id);
 
-        // Filter layers based on domain bundle configuration
+        // Set up filtering for domain bundle layers
         if (this._domainBundleController) {
-            const filteredLayers = this._domainBundleController.filterLayersBasedOnBundleConfig(
-                mapLayers,
-                sortedLayerIds
-            );
-
-            // Remove layers that should be filtered out
-            const currentLayers = mapLayers.toArray();
-            for (const layer of currentLayers) {
-                if (!filteredLayers.includes(layer)) {
-                    mapLayers.remove(layer);
-                }
-            }
+            this._domainBundleController.setupLayerFiltering(map, sortedLayerIds);
         }
 
         const availableLayers = this.getFlattenLayers(mapLayers);
