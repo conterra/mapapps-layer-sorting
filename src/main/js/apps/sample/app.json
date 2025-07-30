@@ -50,7 +50,7 @@
             "Config": {
                 "showRemainingBundleContents": {
                     "domain-sample_1": true,
-                    "domain-sample_2": true
+                    "domain-sample_2": false
                 },
                 "bundleOrderConfiguration": [
                     {
