@@ -44,6 +44,12 @@ export class BundleSortingController {
         const mapConfigController = new MapConfigurationController(mapWidgetModel);
         mapConfigController.getMapConfiguration().then((mapConfig: LayerDefinition[]) => {
             const modelConfig = model.bundleOrderConfiguration;
+
+            if (!modelConfig || modelConfig.length === 0) {
+                console.warn("No layer configuration provided.");
+                return;
+            }
+
             const validationResult = this.validateConfiguration(modelConfig, mapConfig);
 
             if (!validationResult.valid) {
