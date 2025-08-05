@@ -13,7 +13,7 @@
 /// See the License for the specific language governing permissions and
 /// limitations under the License.
 ///
-
+import async from "apprt-core/async";
 import { MapConfigurationController } from "./controllers/MapConfigurationController";
 import { ConfigurationValidationController } from "./controllers/ConfigurationValidationController";
 import { LayerSortingController } from "./controllers/LayerSortingController";
@@ -32,7 +32,9 @@ export class BundleSortingController {
     private _i18n: InjectedReference<MessagesReference>;
 
     activate(): void {
-        this.getAppConfiguration();
+        async(() => {
+            this.getAppConfiguration();
+        }, 5000);
     }
 
     private getAppConfiguration(): void {
@@ -65,7 +67,9 @@ export class BundleSortingController {
                 messages.successNotification,
                 model.showRemainingBundleContents
             );
+
             layerSortingController.restructureLayers(modelConfig);
+
         });
     }
 
