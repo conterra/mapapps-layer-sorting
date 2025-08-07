@@ -17,6 +17,7 @@ All configuration is performed on the `Config` component as shown in the followi
 {
     "dn_layersorting": {
         "Config": {
+            "applicationDelay": 5000,
             "showRemainingBundleContents": {
                 "domain-sample_1": true,
                 "domain-sample_2": false
@@ -49,6 +50,7 @@ All configuration is performed on the `Config` component as shown in the followi
 
 | Property                    | Type   | Values | Default | Description                                                                                                                                                                                            |
 |-----------------------------|--------|--------|---------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| applicationDelay            | number |        | 5000    | Delay before sorting layer. If unset defaults to 0.                                                                                                                                                    |
 | showRemainingBundleContents | Object | {}     | {}      | A configuration object that controls the visibility of content from domain bundles. Each key represents a bundle ID and the boolean value determines whether the bundle's content should be displayed. |
 | bundleOrderConfiguration    | Array  | []     | []      | An array of layer configuration objects that define how layers should be sorted and organized in the map.                                                                                              |
 

@@ -87,7 +87,7 @@ export class LayerSortingController {
                 if (!parentLayer || parentLayer.type !== 'group') {
                     const newGroup = new GroupLayer({
                         id: entry.newParentId,
-                        title: entry.newParentId,
+                        title: parentLayer?.title || entry.newParentId,
                         visible: true,
                         layers: []
                     });
