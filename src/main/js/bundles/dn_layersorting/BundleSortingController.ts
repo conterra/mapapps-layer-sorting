@@ -32,9 +32,11 @@ export class BundleSortingController {
     private _i18n: InjectedReference<MessagesReference>;
 
     activate(): void {
+        const model = this._model!;
+
         async(() => {
             this.getAppConfiguration();
-        }, 5000);
+        }, model.applicationDelay || 0);
     }
 
     private getAppConfiguration(): void {
