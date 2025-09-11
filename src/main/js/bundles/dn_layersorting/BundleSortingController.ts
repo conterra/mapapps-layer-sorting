@@ -13,6 +13,7 @@
 /// See the License for the specific language governing permissions and
 /// limitations under the License.
 ///
+
 import async from "apprt-core/async";
 import { MapConfigurationController } from "./controllers/MapConfigurationController";
 import { ConfigurationValidationController } from "./controllers/ConfigurationValidationController";
@@ -64,13 +65,11 @@ export class BundleSortingController {
 
             const layerSortingController = new LayerSortingController(
                 mapWidgetModel,
-                modelConfig,
                 logService,
-                messages.successNotification,
-                model.showRemainingBundleContents
+                messages.successNotification
             );
 
-            layerSortingController.restructureLayers(modelConfig);
+            layerSortingController.restructureLayers(model.bundleOrderConfiguration, model.showRemainingBundleContents);
 
         });
     }

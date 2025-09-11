@@ -16,6 +16,7 @@
 
 export { BundleSortingModel } from "./BundleSortingModel";
 export { BundleSortingController } from "./BundleSortingController";
+export { DomainBundlePreprocessor } from "./DomainBundlePreprocessor";
 export { LayerSortingController } from "./controllers/LayerSortingController";
 export { MapConfigurationController } from "./controllers/MapConfigurationController";
 export { ConfigurationValidationController } from "./controllers/ConfigurationValidationController";

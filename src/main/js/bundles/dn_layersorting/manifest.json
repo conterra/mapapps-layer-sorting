@@ -8,6 +8,7 @@
     },
     "main": "",
     "i18n": ["bundle"],
+    "startLevel": 10,
     "components": [
         {
             "name": "Config",
@@ -15,7 +16,7 @@
             "provides": "dn_layersorting.BundleSortingModel",
             "propertiesConstructor": true,
             "properties": {
-                "applicationDelay": 5000,
+                "applicationDelay": 10000,
                 "showRemainingBundleContents": {},
                 "bundleOrderConfiguration": []
             }
@@ -35,6 +36,20 @@
                     "name": "_logService",
                     "providing": "ct.framework.api.LogService"
                 }
+            ]
+        },
+         {
+            "name": "DomainBundlePreprocessor",
+            "provides": "domains-system.ConfigFragmentInterpreter",
+            "properties": {
+                "priority": 1
+            },
+            "references": [
+                // {
+                //     "name": "_basemapsModel",
+                //     "providing": "map-basemaps-api.BasemapsModel",
+                //     "cardinality": "0..1"
+                // }
             ]
         }
     ]

@@ -48,9 +48,10 @@
     "bundles": {
         "dn_layersorting": {
             "Config": {
+                "applicationDelay": 15000,
                 "showRemainingBundleContents": {
                     "domain-sample_1": true,
-                    "domain-sample_2": false
+                    "domain-sample_2": true
                 },
                 "bundleOrderConfiguration": [
                     // // neue Gruppe erzeugen:
@@ -58,18 +59,19 @@
                         "id": "Basti's neue Test Gruppe",
                         "order": 0
                     }
-                    // ,
+                    ,
 
-                    // // Neue Gruppe erzeugen, Inhalt einfügen
-                    // {
-                    //     "id": "Basti's zweite Test Gruppe",
-                    //     "order": 1
-                    // },
-                    // {
-                    //     "id": "domain_1_layer_1",
-                    //     "newParentId": "Basti's zweite Test Gruppe",
-                    //     "order": 1
-                    // },
+                    // Neue Gruppe erzeugen, Inhalt einfügen
+                    {
+                        "id": "Basti's zweite Test Gruppe",
+                        "order": 1
+                    },
+                    {
+                        "id": "domain_1_layer_1",
+                        "newParentId": "Basti's zweite Test Gruppe",
+                        "order": 1
+                    }
+                    // ,
 
                     // // Inhalt aus zweitem Domain Bundle hinzusortieren
                     // {

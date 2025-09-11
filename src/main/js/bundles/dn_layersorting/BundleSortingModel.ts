@@ -19,6 +19,7 @@ import { Mutable, properties } from "apprt-core/Mutable";
 import type { DomainBundleConfig } from "./api";
 
 export interface BundleSortingModelProperties {
+    applicationDelay: number,
     showRemainingBundleContents: DomainBundleConfig;
     bundleOrderConfiguration: object[]
 }
@@ -26,6 +27,7 @@ export interface BundleSortingModelProperties {
 export class BundleSortingModel extends Mutable { }
 
 properties(BundleSortingModel, {
+    applicationDelay: 0,
     showRemainingBundleContents: {},
     bundleOrderConfiguration: []
 });

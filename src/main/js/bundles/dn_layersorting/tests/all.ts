@@ -15,6 +15,5 @@
 ///
 
 import "./LayerSortingController.spec";
-import "./DomainBundleController.spec";
 import "./MapConfigurationController.spec";
 import "./ConfigurationValidationController.spec";

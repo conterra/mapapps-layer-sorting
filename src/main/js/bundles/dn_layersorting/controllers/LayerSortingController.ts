@@ -16,7 +16,6 @@
 
 import GroupLayer from "esri/layers/GroupLayer";
 
-import { DomainBundleController } from "./DomainBundleController";
 import type { InjectedReference } from "apprt-core/InjectedReference";
 import type { LayerConfig, DomainBundleConfig } from "../api";
 import type { MapWidgetModel } from "map-widget/api";
@@ -24,66 +23,118 @@ import type { LogNotificationService } from "apprt/api";
 
 export class LayerSortingController {
     private _mapWidgetModel: InjectedReference<MapWidgetModel>;
-    private _config: LayerConfig[];
     private _logService: InjectedReference<LogNotificationService>;
-    private _domainBundleController: DomainBundleController | null = null;
     private successNotification: string;
+
+    private idToLayerMapping?: Map<string, __esri.Layer>;
+    private idToGroupMapping?: Map<string, __esri.GroupLayer>;
 
     constructor(
         _mapWidgetModel: InjectedReference<MapWidgetModel>,
-        config: LayerConfig[],
         logService: InjectedReference<LogNotificationService>,
-        successNotification: string,
-        showRemainingBundleContents?: DomainBundleConfig
+        successNotification: string
     ) {
         this._mapWidgetModel = _mapWidgetModel;
-        this._config = config;
         this._logService = logService;
         this.successNotification = successNotification;
+    }
 
-        // Initialize domain bundle controller if configuration is provided
-        if (showRemainingBundleContents) {
-            this._domainBundleController = new DomainBundleController(showRemainingBundleContents);
+    async restructureLayers(layerConfig: LayerConfig[], domainConfig: DomainBundleConfig): Promise<void> {
+        const view = await this.getView();
+
+        if (!view) {
+            throw new Error("Map view is not available.");
+        }
+        try {
+            this.handleLayerRestructuring(layerConfig, view);
+
+            if (domainConfig) {
+                this.removeFilteredLayersFromMap(domainConfig, view);
+            }
+
+            this._logService?.info(this.successNotification);
+        }
+        catch {
+            this._logService?.error("error");
         }
     }
 
-    async restructureLayers(config: LayerConfig[]): Promise<void> {
-        const view = await this.getView();
-        const map = view?.map;
-        const mapLayers = map?.layers;
+    private handleLayerRestructuring(layerConfig: LayerConfig[], view: __esri.MapView): void {
+        const map = view.map;
+        const mapLayers = map.layers;
 
-        if (!mapLayers) {
-            throw new Error("Map layers are not available.");
-        }
-
-        // Get sorted layer IDs from config for domain bundle filtering
-        const sortedLayerIds = config.map(entry => entry.id);
-
-        // Set up filtering for domain bundle layers
-        if (this._domainBundleController) {
-            this._domainBundleController.setupLayerFiltering(map, sortedLayerIds);
+        if (!mapLayers || mapLayers.length === 0) {
+            console.error("Map layers are not available.");
+            return;
         }
 
         const availableLayers = this.getFlattenLayers(mapLayers);
-        const idToLayer = new Map<string, __esri.Layer>();
-        const idToGroup = new Map<string, __esri.GroupLayer>();
+        const idToLayerMapping = this.idToLayerMapping = new Map<string, __esri.Layer>();
+        const idToGroupMapping = this.idToGroupMapping = new Map<string, __esri.GroupLayer>();
         const rootLayers: __esri.Layer[] = [];
 
-        // Build initial layer mappings
-        const availableLayersArray = availableLayers.toArray();
-        for (const layer of availableLayersArray) {
-            idToLayer.set(layer.id, layer);
+        availableLayers.items.forEach((layer: __esri.Layer | __esri.GroupLayer) => {
+            idToLayerMapping.set(layer.id, layer);
             if (layer.type === 'group') {
-                idToGroup.set(layer.id, layer as __esri.GroupLayer);
+                idToGroupMapping.set(layer.id, layer as __esri.GroupLayer);
             }
-        }
+        });
 
-        // First pass: ensure all referenced parent groups exist
+        const createdParentGroupsMapping = this.createParentGroupsMapping(layerConfig);
+
+        layerConfig.forEach(entry => {
+            let layer = idToLayerMapping.get(entry.id);
+
+            if (!layer) {
+                layer = this.createGroupLayer(entry.id);
+            } else if (layer.type === 'group') {
+                idToGroupMapping.set(entry.id, layer as __esri.GroupLayer);
+            }
+
+            if (entry.newParentId) {
+                this.sortLayerToNewParent(layer, entry, map, layerConfig);
+            } else {
+                if (layer.parent && 'layers' in layer.parent) {
+                    (layer.parent as __esri.GroupLayer).layers.remove(layer);
+                }
+                rootLayers.push(layer);
+            }
+        });
+
+        this.addNewGroupsWithoutParentToRoot(createdParentGroupsMapping, layerConfig, rootLayers);
+        this.handleRootLayers(map, layerConfig, rootLayers);
+    }
+
+    private removeFilteredLayersFromMap(domainConfig: DomainBundleConfig, view: __esri.MapView): void {
+        const map = view.map;
+        console.info(domainConfig);
+
+        this.getFlattenLayers(map.layers).forEach((layer: __esri.Layer) => {
+            const extendedLayer = layer as __esri.Layer & {
+                wasRestructured?: boolean;
+                _sourceDomainBundle?: string;
+            };
+            if (
+                extendedLayer?.wasRestructured ||
+                !extendedLayer?._sourceDomainBundle ||
+                domainConfig[extendedLayer?._sourceDomainBundle] === true
+            ) return;
+
+            map.remove(extendedLayer);
+        });
+    }
+
+    private createParentGroupsMapping(
+        layerConfig: LayerConfig[]
+    ): Set<string> {
+        const idToLayerMapping = this.idToLayerMapping!;
+        const idToGroupMapping = this.idToGroupMapping!;
+
         const createdParentGroups = new Set<string>();
-        for (const entry of config) {
-            if (entry.newParentId && !idToGroup.has(entry.newParentId)) {
-                // Create parent group if it doesn't exist
-                const parentLayer = idToLayer.get(entry.newParentId);
+
+        for (const entry of layerConfig) {
+            if (entry.newParentId && idToGroupMapping.has(entry.newParentId)) {
+                const parentLayer = idToLayerMapping.get(entry.newParentId);
                 if (!parentLayer || parentLayer.type !== 'group') {
                     const newGroup = new GroupLayer({
                         id: entry.newParentId,
@@ -91,76 +142,81 @@ export class LayerSortingController {
                         visible: true,
                         layers: []
                     });
-                    idToLayer.set(entry.newParentId, newGroup);
-                    idToGroup.set(entry.newParentId, newGroup);
+                    idToLayerMapping.set(entry.newParentId, newGroup);
+                    idToGroupMapping.set(entry.newParentId, newGroup);
                     createdParentGroups.add(entry.newParentId);
                 }
             }
         }
 
-        // Second pass: create missing layers and process hierarchy
-        for (const entry of config) {
-            let layer = idToLayer.get(entry.id);
+        return createdParentGroups;
+    }
 
-            if (!layer) {
-                // Create new group layer if it doesn't exist
-                layer = new GroupLayer({
-                    id: entry.id,
-                    title: entry.id,
-                    visible: true,
-                    layers: []
-                });
-                idToLayer.set(entry.id, layer);
-                idToGroup.set(entry.id, layer as __esri.GroupLayer);
-            } else if (layer.type === 'group') {
-                idToGroup.set(entry.id, layer as __esri.GroupLayer);
-            }
+    private createGroupLayer(id: string): __esri.GroupLayer {
+        const idToLayerMapping = this.idToLayerMapping!;
+        const idToGroupMapping = this.idToGroupMapping!;
 
-            if (entry.newParentId) {
-                const parentGroup = idToGroup.get(entry.newParentId);
-                if (parentGroup) {
-                    // Remove layer from current parent (if any)
-                    if (layer.parent && 'layers' in layer.parent) {
-                        (layer.parent as __esri.GroupLayer).layers.remove(layer);
-                    } else {
-                        // Layer might be at root level
-                        map.layers.remove(layer);
-                    }
+        const groupLayer = new GroupLayer({
+            id: id,
+            title: id,
+            visible: true,
+            layers: []
+        });
+        idToLayerMapping.set(id, groupLayer);
+        idToGroupMapping.set(id, groupLayer);
+        return groupLayer;
+    }
 
-                    // Add to new parent
-                    const children = parentGroup.layers.toArray();
-                    children.push(layer);
-                    parentGroup.layers.removeAll();
-                    parentGroup.layers.addMany(
-                        children.sort((a, b) => {
-                            const orderA = config.find(c => c.id === a.id)?.order ?? 0;
-                            const orderB = config.find(c => c.id === b.id)?.order ?? 0;
-                            return orderB - orderA; // Descending order for Esri API
-                        })
-                    );
-                } else {
-                    throw new Error(`Parent group '${entry.newParentId}' not found for layer '${entry.id}'`);
-                }
+    private sortLayerToNewParent(
+        layer: __esri.Layer,
+        entry: LayerConfig,
+        map: __esri.Map,
+        layerConfig: LayerConfig[]
+    ): void {
+        const idToGroupMapping = this.idToGroupMapping!;
+
+        const parentGroup = idToGroupMapping.get(entry?.newParentId);
+        if (parentGroup) {
+            if (layer.parent && 'layers' in layer.parent) {
+                (layer.parent as __esri.GroupLayer).layers.remove(layer);
             } else {
-                // Remove from current parent if moving to root
-                if (layer.parent && 'layers' in layer.parent) {
-                    (layer.parent as __esri.GroupLayer).layers.remove(layer);
-                }
-                rootLayers.push(layer);
+                map.layers.remove(layer);
             }
-        }
 
-        // Add created parent groups that don't have config entries to root layers
-        for (const parentId of createdParentGroups) {
-            const hasConfigEntry = config.some(entry => entry.id === parentId);
+            const children = parentGroup.layers.toArray();
+            children.push(layer);
+            parentGroup.layers.removeAll();
+            parentGroup.layers.addMany(
+                children.sort((a, b) => {
+                    const orderA = layerConfig.find(c => c.id === a.id)?.order ?? 0;
+                    const orderB = layerConfig.find(c => c.id === b.id)?.order ?? 0;
+                    return orderB - orderA;
+                })
+            );
+        } else {
+            throw new Error(`Parent group '${entry.newParentId}' not found for layer '${entry.id}'`);
+        }
+    }
+
+    private addNewGroupsWithoutParentToRoot(
+        createdParentGroupsMapping: Set<string>,
+        layerConfig: LayerConfig[],
+        rootLayers: __esri.GroupLayer[]
+    ): void {
+        const idToGroupMapping = this.idToGroupMapping!;
+
+        createdParentGroupsMapping.forEach((parentId: string) => {
+            const hasConfigEntry = layerConfig.some(entry => entry.id === parentId);
             if (!hasConfigEntry) {
-                const parentGroup = idToLayer.get(parentId);
+                const parentGroup = idToGroupMapping.get(parentId);
                 if (parentGroup) {
                     rootLayers.push(parentGroup);
                 }
             }
-        }
+        });
+    }
 
+    private handleRootLayers(map: __esri.Map, layerConfig: LayerConfig[], rootLayers: __esri.GroupLayer[]) {
         // Add root layers to map (only new ones or ones that need reordering)
         const currentRootLayers = map.layers.toArray();
         for (const layer of currentRootLayers) {
@@ -170,8 +226,8 @@ export class LayerSortingController {
         }
 
         rootLayers.sort((a, b) => {
-            const orderA = config.find(c => c.id === a.id)?.order ?? 0;
-            const orderB = config.find(c => c.id === b.id)?.order ?? 0;
+            const orderA = layerConfig.find(c => c.id === a.id)?.order ?? 0;
+            const orderB = layerConfig.find(c => c.id === b.id)?.order ?? 0;
             return orderB - orderA; // Descending order for Esri API
         });
 
@@ -180,8 +236,6 @@ export class LayerSortingController {
                 map.add(layer);
             }
         }
-
-        this._logService?.info(this.successNotification);
     }
 
     private getView(): Promise<__esri.MapView | __esri.SceneView | undefined> {
