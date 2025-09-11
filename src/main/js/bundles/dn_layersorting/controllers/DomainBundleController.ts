@@ -94,8 +94,10 @@ export class DomainBundleController {
             // If layer is from a domain bundle
             if (bundleId && this._domainBundles.has(bundleId)) {
                 // If layer is not explicitly sorted and remaining content should not be shown
-                if (!sortedLayerIds.includes(layer.id) &&
-                    this._showRemainingBundleContents[bundleId] !== true) {
+                if (
+                    !sortedLayerIds.includes(layer.id) &&
+                    this._showRemainingBundleContents[bundleId] !== true
+                ) {
                     layersToRemove.push(layer);
                 }
             }

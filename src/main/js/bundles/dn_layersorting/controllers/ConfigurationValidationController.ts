@@ -46,13 +46,6 @@ export class ConfigurationValidationController {
         const processedConfigIds = new Set<string>();
 
         for (const entry of this.config) {
-            // Skip validation for layer IDs if they have a newParentId -
-            // these could be domain layers or new groups being created
-            if (!entry.newParentId && !availableLayerIds.has(entry.id)) {
-                errors.push(`ID ${entry.id} does not match any available layer.`);
-            }
-
-            // Check parent reference validity
             if (entry.newParentId) {
                 // If parent ID is in the config, it must have been processed earlier (no forward references)
                 if (this.idSet.has(entry.newParentId)) {
@@ -61,6 +54,7 @@ export class ConfigurationValidationController {
                             `Invalid parent reference: ${entry.id} refers to unknown parent ${entry.newParentId}`
                         );
                     }
+                    // else if ()... should test if newParent is a group layer
                 }
                 // Note: We allow newParentId to reference existing layers or IDs that will be created dynamically
             }

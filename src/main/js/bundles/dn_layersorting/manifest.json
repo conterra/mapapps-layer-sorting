@@ -15,6 +15,7 @@
             "provides": "dn_layersorting.BundleSortingModel",
             "propertiesConstructor": true,
             "properties": {
+                "applicationDelay": 5000,
                 "showRemainingBundleContents": {},
                 "bundleOrderConfiguration": []
             }
