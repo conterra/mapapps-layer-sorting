@@ -78,6 +78,10 @@ export class LayerSortingController {
             if (layer.type === 'group') {
                 idToGroupMapping.set(layer.id, layer as __esri.GroupLayer);
             }
+
+            if (!layer.parent.parent && !layerConfig.find(entry => entry.id === layer.id)) {
+                rootLayers.push(layer);
+            }
         });
 
         const createdParentGroupsMapping = this.createParentGroupsMapping(layerConfig);
@@ -96,6 +100,7 @@ export class LayerSortingController {
             } else {
                 if (layer.parent && 'layers' in layer.parent) {
                     (layer.parent as __esri.GroupLayer).layers.remove(layer);
+                    console.info("removing", layer);
                 }
                 rootLayers.push(layer);
             }
@@ -121,6 +126,7 @@ export class LayerSortingController {
             ) return;
 
             map.remove(extendedLayer);
+            console.info("removing", layer);
         });
     }
 
@@ -179,8 +185,10 @@ export class LayerSortingController {
         if (parentGroup) {
             if (layer.parent && 'layers' in layer.parent) {
                 (layer.parent as __esri.GroupLayer).layers.remove(layer);
+                console.info("removing", layer);
             } else {
                 map.layers.remove(layer);
+                console.info("removing", layer);
             }
 
             const children = parentGroup.layers.toArray();
@@ -222,6 +230,7 @@ export class LayerSortingController {
         for (const layer of currentRootLayers) {
             if (!rootLayers.includes(layer)) {
                 map.layers.remove(layer);
+                console.info("removing", layer);
             }
         }
 
