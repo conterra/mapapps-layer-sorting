@@ -10,8 +10,8 @@
     "domain-config": {
         "map-layers": [
             {
-                "id": "layer_domain_1",
-                "title": "schulen",
+                "id": "domain_1_layer_1",
+                "title": "Domain 1 Layer 1: Schulen",
                 "type": "AGS_FEATURE",
                 "url": "https://services2.arcgis.com/jUpNdisbWqRpMo35/arcgis/rest/services/Hamburg_Schulen/FeatureServer/0"
 

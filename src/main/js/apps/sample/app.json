@@ -48,6 +48,7 @@
     "bundles": {
         "dn_layersorting": {
             "Config": {
+                "applicationDelay": 10000,
                 "showRemainingBundleContents": {
                     "domain-sample_1": true,
                     "domain-sample_2": false
@@ -55,15 +56,15 @@
                 "bundleOrderConfiguration": [
                     {
                         "id": "koeln2",
-                        "order": 7
+                        "order": 2
                     },
                     {
                         "id": "koeln1",
-                        "order": 8
+                        "order": 1
                     },
                     {
                         "id": "group2_new",
-                        "order": 0,
+                        "order": 3,
                         "newParentId": "koeln2"
                     },
                     {

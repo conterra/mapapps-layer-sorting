@@ -32,9 +32,23 @@ describe('LayerSortingController', () => {
         };
     }
 
+    function createMockLogService(): any {
+        return {
+            info: (_message: string) => {},
+            error: (_message: string) => {},
+            warn: (_message: string) => {}
+        };
+    }
+
     function createMockCollection(items: any[] = []): any {
         return {
             _items: [...items],
+            get length() {
+                return this._items.length;
+            },
+            get items() {
+                return this._items;
+            },
             flatten: function(fn: any) {
                 const result: any[] = [];
                 for (const item of this._items) {
@@ -65,7 +79,10 @@ describe('LayerSortingController', () => {
                 this._items.push(...layers);
             },
             includes: function(layer: any) {
-                return this._items.some((item: any) => item.id === layer.id);
+                return this._items.includes(layer);
+            },
+            forEach: function(callback: any) {
+                this.items.forEach(callback);
             }
         };
     }
@@ -74,7 +91,7 @@ describe('LayerSortingController', () => {
         const layer: any = {
             id,
             type,
-            parent
+            parent: parent || { parent: null }
         };
 
         if (type === 'group') {
@@ -109,9 +126,9 @@ describe('LayerSortingController', () => {
         ];
 
         const controller = new LayerSortingController(
-            createMockMapWidgetModel(mockView), config, undefined as any, "Success");
+            createMockMapWidgetModel(mockView), createMockLogService(), "Success");
 
-        await controller.restructureLayers(config);
+        await controller.restructureLayers(config, {});
 
         // Check that layers are sorted in descending order (higher order first)
         const layerOrder = mockMap.layers.toArray().map((l: any) => l.id);
@@ -134,15 +151,17 @@ describe('LayerSortingController', () => {
         const config: any[] = [];
 
         const controller = new LayerSortingController(
-            createMockMapWidgetModel(mockView), config, undefined as any, "Success");
+            createMockMapWidgetModel(mockView), createMockLogService(), "Success");
 
-        await controller.restructureLayers(config);
+        await controller.restructureLayers(config, {});
 
         expect(mockMap.layers.toArray()).to.deep.equal([]);
     });
 
     it('should create missing layers as group layers', async () => {
-        const mockLayers = createMockCollection([]);
+        // Start with some existing layers to ensure the controller processes correctly
+        const existingLayer = createMockLayer('existing', 'layer');
+        const mockLayers = createMockCollection([existingLayer]);
         const mockMap = {
             layers: mockLayers,
             add: function(layer: any) {
@@ -155,18 +174,22 @@ describe('LayerSortingController', () => {
 
         const mockView = { map: mockMap };
         const config = [
-            { id: 'newlayer', order: 1 }
+            { id: 'existing', order: 0 },  // Include existing layer in config
+            { id: 'newlayer', order: 1 }   // This should be created
         ];
 
         const controller = new LayerSortingController(
-            createMockMapWidgetModel(mockView), config, undefined as any, "Success");
+            createMockMapWidgetModel(mockView), createMockLogService(), "Success");
 
-        await controller.restructureLayers(config);
+        await controller.restructureLayers(config, {});
 
         const addedLayers = mockMap.layers.toArray();
-        expect(addedLayers).to.have.length(1);
-        expect(addedLayers[0].id).to.equal('newlayer');
-        expect(addedLayers[0].type).to.equal('group');
+        // Should have both existing and new layer
+        expect(addedLayers).to.have.length(2);
+
+        const newLayer = addedLayers.find((l: any) => l.id === 'newlayer');
+        expect(newLayer).to.not.equal(undefined);
+        expect(newLayer.type).to.equal('group');
     });
 
     it('should handle parent-child relationships correctly', async () => {
@@ -191,9 +214,9 @@ describe('LayerSortingController', () => {
         ];
 
         const controller = new LayerSortingController(
-            createMockMapWidgetModel(mockView), config, undefined as any, "Success");
+            createMockMapWidgetModel(mockView), createMockLogService(), "Success");
 
-        await controller.restructureLayers(config);
+        await controller.restructureLayers(config, {});
 
         // Parent should be in root layers
         const rootLayers = mockMap.layers.toArray();
@@ -224,9 +247,9 @@ describe('LayerSortingController', () => {
         ];
 
         const controller = new LayerSortingController(
-            createMockMapWidgetModel(mockView), config, undefined as any, "Success");
+            createMockMapWidgetModel(mockView), createMockLogService(), "Success");
 
-        await controller.restructureLayers(config);
+        await controller.restructureLayers(config, {});
 
         // The missing parent should be created and added to root
         const rootLayers = mockMap.layers.toArray();
@@ -263,9 +286,9 @@ describe('LayerSortingController', () => {
         ];
 
         const controller = new LayerSortingController(
-            createMockMapWidgetModel(mockView), config, undefined as any, "Success");
+            createMockMapWidgetModel(mockView), createMockLogService(), "Success");
 
-        await controller.restructureLayers(config);
+        await controller.restructureLayers(config, {});
 
         // Check root layer ordering (descending)
         const rootLayers = mockMap.layers.toArray();

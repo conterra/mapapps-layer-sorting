@@ -7,7 +7,9 @@
         "notifier": "^4.15.0"
     },
     "main": "",
-    "i18n": ["bundle"],
+    "i18n": [
+        "bundle"
+    ],
     "components": [
         {
             "name": "Config",
@@ -15,6 +17,7 @@
             "provides": "dn_layersorting.BundleSortingModel",
             "propertiesConstructor": true,
             "properties": {
+                "applicationDelay": 10000,
                 "showRemainingBundleContents": {},
                 "bundleOrderConfiguration": []
             }
@@ -35,6 +38,13 @@
                     "providing": "ct.framework.api.LogService"
                 }
             ]
+        },
+        {
+            "name": "DomainBundleSourcePreprocessor",
+            "provides": "domains-system.ConfigFragmentInterpreter",
+            "properties": {
+                "Service-Ranking": 100
+            }
         }
     ]
 }
