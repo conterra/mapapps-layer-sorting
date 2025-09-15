@@ -13,6 +13,7 @@
 /// See the License for the specific language governing permissions and
 /// limitations under the License.
 ///
+
 import type { ConfigFragment, Disposable, InterpretationOptions, ConfigFragmentInterpreter } from "domains-system/api";
 
 interface LayerConfig {
@@ -22,7 +23,7 @@ interface LayerConfig {
     sublayers?: ReadonlyArray<LayerConfig>;
 }
 
-export class DomainBundlePreprocessor implements ConfigFragmentInterpreter {
+export class DomainBundleSourcePreprocessor implements ConfigFragmentInterpreter {
     async interpret(
         bundleConfig: ConfigFragment,
         { bundle }: InterpretationOptions
@@ -32,18 +33,19 @@ export class DomainBundlePreprocessor implements ConfigFragmentInterpreter {
             return;
         }
 
+        const symbolicName = bundle.getSymbolicName();
         bundleLayers.forEach((layerConfig: LayerConfig) => {
-            layerConfig["_sourceDomainBundle"] = bundle["_symbolicName"];
+            layerConfig["_sourceDomainBundle"] = symbolicName;
 
             if (layerConfig.layers && layerConfig.layers.length > 0) {
                 layerConfig.layers.forEach((subLayerConfig: LayerConfig) => {
-                    subLayerConfig["_sourceDomainBundle"] = bundle["_symbolicName"];
+                    subLayerConfig["_sourceDomainBundle"] = symbolicName;
                 });
             }
 
             if (layerConfig.sublayers && layerConfig.sublayers.length > 0) {
                 layerConfig.sublayers.forEach((subLayerConfig: LayerConfig) => {
-                    subLayerConfig["_sourceDomainBundle"] = bundle["_symbolicName"];
+                    subLayerConfig["_sourceDomainBundle"] = symbolicName;
                 });
             }
         });

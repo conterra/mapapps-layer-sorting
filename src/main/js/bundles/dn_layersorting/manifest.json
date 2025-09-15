@@ -7,8 +7,9 @@
         "notifier": "^4.15.0"
     },
     "main": "",
-    "i18n": ["bundle"],
-    "startLevel": 10,
+    "i18n": [
+        "bundle"
+    ],
     "components": [
         {
             "name": "Config",
@@ -38,19 +39,12 @@
                 }
             ]
         },
-         {
-            "name": "DomainBundlePreprocessor",
+        {
+            "name": "DomainBundleSourcePreprocessor",
             "provides": "domains-system.ConfigFragmentInterpreter",
             "properties": {
-                "priority": 1
-            },
-            "references": [
-                // {
-                //     "name": "_basemapsModel",
-                //     "providing": "map-basemaps-api.BasemapsModel",
-                //     "cardinality": "0..1"
-                // }
-            ]
+                "Service-Ranking": 100
+            }
         }
     ]
 }
