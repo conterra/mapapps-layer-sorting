@@ -139,7 +139,7 @@ export class LayerSortingController {
         const createdParentGroups = new Set<string>();
 
         for (const entry of layerConfig) {
-            if (entry.newParentId && idToGroupMapping.has(entry.newParentId)) {
+            if (entry.newParentId && !idToGroupMapping.has(entry.newParentId)) {
                 const parentLayer = idToLayerMapping.get(entry.newParentId);
                 if (!parentLayer || parentLayer.type !== 'group') {
                     const newGroup = new GroupLayer({
@@ -181,29 +181,30 @@ export class LayerSortingController {
     ): void {
         const idToGroupMapping = this.idToGroupMapping!;
 
-        const parentGroup = idToGroupMapping.get(entry?.newParentId);
-        if (parentGroup) {
-            if (layer.parent && 'layers' in layer.parent) {
-                (layer.parent as __esri.GroupLayer).layers.remove(layer);
-                console.info("removing", layer);
-            } else {
-                map.layers.remove(layer);
-                console.info("removing", layer);
-            }
-
-            const children = parentGroup.layers.toArray();
-            children.push(layer);
-            parentGroup.layers.removeAll();
-            parentGroup.layers.addMany(
-                children.sort((a, b) => {
-                    const orderA = layerConfig.find(c => c.id === a.id)?.order ?? 0;
-                    const orderB = layerConfig.find(c => c.id === b.id)?.order ?? 0;
-                    return orderB - orderA;
-                })
-            );
-        } else {
-            throw new Error(`Parent group '${entry.newParentId}' not found for layer '${entry.id}'`);
+        let parentGroup = idToGroupMapping.get(entry?.newParentId);
+        if (!parentGroup) {
+            // Create missing parent group
+            parentGroup = this.createGroupLayer(entry.newParentId!);
         }
+
+        if (layer.parent && 'layers' in layer.parent) {
+            (layer.parent as __esri.GroupLayer).layers.remove(layer);
+            console.info("removing", layer);
+        } else {
+            map.layers.remove(layer);
+            console.info("removing", layer);
+        }
+
+        const children = parentGroup.layers.toArray();
+        children.push(layer);
+        parentGroup.layers.removeAll();
+        parentGroup.layers.addMany(
+            children.sort((a, b) => {
+                const orderA = layerConfig.find(c => c.id === a.id)?.order ?? 0;
+                const orderB = layerConfig.find(c => c.id === b.id)?.order ?? 0;
+                return orderB - orderA;
+            })
+        );
     }
 
     private addNewGroupsWithoutParentToRoot(

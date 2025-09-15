@@ -51,7 +51,7 @@
                 "applicationDelay": 15000,
                 "showRemainingBundleContents": {
                     "domain-sample_1": true,
-                    "domain-sample_2": true
+                    "domain-sample_2": false
                 },
                 "bundleOrderConfiguration": [
                     // // neue Gruppe erzeugen:
