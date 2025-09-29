@@ -20,6 +20,7 @@ import type { InjectedReference } from "apprt-core/InjectedReference";
 import type { LayerConfig, DomainBundleConfig } from "../api";
 import type { MapWidgetModel } from "map-widget/api";
 import type { LogNotificationService } from "apprt/api";
+import { root } from "src/main/js/apps/sample/nls/bundle";
 
 export class LayerSortingController {
     private _mapWidgetModel: InjectedReference<MapWidgetModel>;
@@ -109,7 +110,6 @@ export class LayerSortingController {
             } else {
                 if (layer.parent && 'layers' in layer.parent) {
                     (layer.parent as __esri.GroupLayer).layers.remove(layer);
-                    console.info("removing", layer);
                 }
                 rootLayers.push(layer);
             }
@@ -121,7 +121,6 @@ export class LayerSortingController {
 
     private removeFilteredLayersFromMap(domainConfig: DomainBundleConfig, view: __esri.MapView): void {
         const map = view.map;
-        console.info(domainConfig);
 
         this.getFlattenLayers(map.layers).forEach((layer: __esri.Layer) => {
             const extendedLayer = layer as __esri.Layer & {
@@ -135,7 +134,6 @@ export class LayerSortingController {
             ) return;
 
             map.remove(extendedLayer);
-            console.info("removing", layer);
         });
     }
 
@@ -198,10 +196,8 @@ export class LayerSortingController {
 
         if (layer.parent && 'layers' in layer.parent) {
             (layer.parent as __esri.GroupLayer).layers.remove(layer);
-            console.info("removing", layer);
         } else {
             map.layers.remove(layer);
-            console.info("removing", layer);
         }
 
         const children = parentGroup.layers.toArray();
@@ -214,9 +210,9 @@ export class LayerSortingController {
 
     private getOrder(layer: __esri.Layer, layerConfig: LayerConfig[], children: __esri.Layer[]): number {
         let configEntry;
-        console.info(layer.type);
         if (!layer.type || layer.type !== "sublayer") {
             configEntry = layerConfig.find(entry => entry.id === layer.id);
+            console.info("configEntry", configEntry);
         } else {
             configEntry = layerConfig.find(entry => entry.id == `${layer?.parent?.id}/${layer?.id}`);
         }
@@ -256,20 +252,15 @@ export class LayerSortingController {
         for (const layer of currentRootLayers) {
             if (!rootLayers.includes(layer)) {
                 map.layers.remove(layer);
-                console.info("removing", layer);
             }
         }
 
         map.layers.removeAll();
-        map.layers.addMany(
-            rootLayers.sort((a, b) => {
-                const orderA = this.getOrder(a, layerConfig, currentRootLayers);
-                const orderB = this.getOrder(b, layerConfig, currentRootLayers);
+        rootLayers.forEach(layer => {
+            layer._order = this.getOrder(layer, layerConfig, rootLayers);
+        });
 
-                console.info(`Sorting root layers: ${a.title} (${orderA}) and ${b.title} (${orderB})`);
-                return orderB - orderA; // Descending order for Esri API
-            })
-        );
+        rootLayers.sort((a, b) => (a as any)._order - (b as any)._order);
 
         for (const layer of rootLayers) {
             if (!map.layers.includes(layer)) {
