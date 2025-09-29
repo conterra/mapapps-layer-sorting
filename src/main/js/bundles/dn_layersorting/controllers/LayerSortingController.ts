@@ -207,13 +207,9 @@ export class LayerSortingController {
         const children = parentGroup.layers.toArray();
         children.push(layer);
         parentGroup.layers.removeAll();
-        parentGroup.layers.addMany(
-            children.sort((a, b) => {
-                const orderA = this.getOrder(a, layerConfig, children);
-                const orderB = this.getOrder(b, layerConfig, children);
-                return orderB - orderA;
-            })
-        );
+        children.forEach(child => {
+            parentGroup.layers.add(child, this.getOrder(child, layerConfig, children));
+        });
     }
 
     private getOrder(layer: __esri.Layer, layerConfig: LayerConfig[], children: __esri.Layer[]): number {
@@ -226,7 +222,7 @@ export class LayerSortingController {
         }
 
         if (configEntry?.order !== undefined) {
-            return configEntry.order;
+            return children.length - 1 - configEntry.order;
         }
         return this.getOrderByPosition(layer, children) ?? 0;
     }
