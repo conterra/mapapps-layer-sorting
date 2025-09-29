@@ -20,7 +20,6 @@ import type { InjectedReference } from "apprt-core/InjectedReference";
 import type { LayerConfig, DomainBundleConfig } from "../api";
 import type { MapWidgetModel } from "map-widget/api";
 import type { LogNotificationService } from "apprt/api";
-import { root } from "src/main/js/apps/sample/nls/bundle";
 
 export class LayerSortingController {
     private _mapWidgetModel: InjectedReference<MapWidgetModel>;
@@ -196,6 +195,11 @@ export class LayerSortingController {
 
         if (layer.parent && 'layers' in layer.parent) {
             (layer.parent as __esri.GroupLayer).layers.remove(layer);
+            if (layer.parent.layers.length === 0) {
+                map.layers.remove(layer.parent);
+            }
+        } else if (layer.parent && 'sublayers' in layer.parent) {
+            (layer.parent as __esri.MapImageLayer).listMode = "hide";
         } else {
             map.layers.remove(layer);
         }
