@@ -63,17 +63,25 @@
                         "order": 2
                     },
                     {
+                        "id": "test",
+                        "order": 4
+                    },
+                    {
+                        "id": "test1",
+                        "order": 6
+                    },
+                    {
                         "id": "koeln2",
                         "order": 3
                     },
                     {
                         "id": "group2_new",
-                        "order": 0,
+                        "order": 1,
                         "newParentId": "koeln2"
                     },
                     {
                         "id": "koeln/3",
-                        "order": 4,
+                        "order": 3,
                         "newParentId": "koeln2"
                     },
                     {
