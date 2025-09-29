@@ -54,8 +54,9 @@ export class LayerSortingController {
 
             this._logService?.info(this.successNotification);
         }
-        catch {
-            this._logService?.error("error");
+        catch (e) {
+            console.error(e);
+            this._logService?.error(e);
         }
     }
 
@@ -74,13 +75,21 @@ export class LayerSortingController {
         const rootLayers: __esri.Layer[] = [];
 
         availableLayers.items.forEach((layer: __esri.Layer | __esri.GroupLayer) => {
-            idToLayerMapping.set(layer.id, layer);
             if (layer.type === 'group') {
                 idToGroupMapping.set(layer.id, layer as __esri.GroupLayer);
+                idToLayerMapping.set(layer.id, layer);
+            }
+
+            if (layer.type === "map-image") {
+                layer.sublayers?.forEach(sublayer => {
+                    idToLayerMapping.set(`${layer.id}/${sublayer.id}`, sublayer);
+                });
+                idToLayerMapping.set(layer.id, layer);
             }
 
             if (!layer.parent.parent && !layerConfig.find(entry => entry.id === layer.id)) {
                 rootLayers.push(layer);
+                idToLayerMapping.set(layer.id, layer);
             }
         });
 
@@ -200,12 +209,32 @@ export class LayerSortingController {
         parentGroup.layers.removeAll();
         parentGroup.layers.addMany(
             children.sort((a, b) => {
-                const orderA = layerConfig.find(c => c.id === a.id)?.order ?? 0;
-                const orderB = layerConfig.find(c => c.id === b.id)?.order ?? 0;
+                const orderA = this.getOrder(a, layerConfig, children);
+                const orderB = this.getOrder(b, layerConfig, children);
                 return orderB - orderA;
             })
         );
     }
+
+    private getOrder(layer: __esri.Layer, layerConfig: LayerConfig[], children: __esri.Layer[]): number {
+        let configEntry;
+        console.info(layer.type);
+        if (!layer.type || layer.type !== "sublayer") {
+            configEntry = layerConfig.find(entry => entry.id === layer.id);
+        } else {
+            configEntry = layerConfig.find(entry => entry.id == `${layer?.parent?.id}/${layer?.id}`);
+        }
+
+        if (configEntry?.order !== undefined) {
+            return configEntry.order;
+        }
+        return this.getOrderByPosition(layer, children) ?? 0;
+    }
+
+    private getOrderByPosition(layer: __esri.Layer, children: __esri.Layer[]): number | undefined {
+        return children.indexOf(layer);
+    }
+
 
     private addNewGroupsWithoutParentToRoot(
         createdParentGroupsMapping: Set<string>,
@@ -235,11 +264,16 @@ export class LayerSortingController {
             }
         }
 
-        rootLayers.sort((a, b) => {
-            const orderA = layerConfig.find(c => c.id === a.id)?.order ?? 0;
-            const orderB = layerConfig.find(c => c.id === b.id)?.order ?? 0;
-            return orderB - orderA; // Descending order for Esri API
-        });
+        map.layers.removeAll();
+        map.layers.addMany(
+            rootLayers.sort((a, b) => {
+                const orderA = this.getOrder(a, layerConfig, currentRootLayers);
+                const orderB = this.getOrder(b, layerConfig, currentRootLayers);
+
+                console.info(`Sorting root layers: ${a.title} (${orderA}) and ${b.title} (${orderB})`);
+                return orderB - orderA; // Descending order for Esri API
+            })
+        );
 
         for (const layer of rootLayers) {
             if (!map.layers.includes(layer)) {

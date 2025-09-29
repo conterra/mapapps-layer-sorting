@@ -14,7 +14,40 @@
                 "title": "Domain 1 Layer 1: Schulen",
                 "type": "AGS_FEATURE",
                 "url": "https://services2.arcgis.com/jUpNdisbWqRpMo35/arcgis/rest/services/Hamburg_Schulen/FeatureServer/0"
-
+            },
+            {
+                "id": "koeln",
+                "url": "https://geoportal.stadt-koeln.de/arcgis/rest/services/basiskarten/kgg/MapServer",
+                "type": "AGS_DYNAMIC",
+                "title": "Stadt Köln",
+                "sublayers": [
+                    {
+                        "id": 3,
+                        "title": "AGS Dynamic",
+                        "popupTemplate": {
+                            "popupType": "related-tables-popup",
+                            "customActions": [
+                                "maximize-popup"
+                            ],
+                            "title": "Stadtteil {name}",
+                            "content": [
+                                {
+                                    "type": "fields",
+                                    "fieldInfos": [
+                                        {
+                                            "fieldName": "st_area(shape)",
+                                            "label": "Fläche",
+                                            "format": {
+                                                "places": 2,
+                                                "digitSeparator": true
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ]
             }
         ]
     }

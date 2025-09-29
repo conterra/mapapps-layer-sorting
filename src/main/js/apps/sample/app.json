@@ -55,16 +55,25 @@
                 },
                 "bundleOrderConfiguration": [
                     {
-                        "id": "koeln2",
+                        "id": "koeln1",
+                        "order": 0
+                    },
+                    {
+                        "id": "koeln3",
                         "order": 2
                     },
                     {
-                        "id": "koeln1",
-                        "order": 1
+                        "id": "koeln2",
+                        "order": 3
                     },
                     {
                         "id": "group2_new",
-                        "order": 3,
+                        "order": 0,
+                        "newParentId": "koeln2"
+                    },
+                    {
+                        "id": "koeln/3",
+                        "order": 4,
                         "newParentId": "koeln2"
                     },
                     {
