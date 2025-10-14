@@ -1,6 +1,6 @@
 {
     "name": "domain-sample_2",
-    "version": "1.0.0",
+    "version": "1.0.1-SNAPSHOT",
     "dependencies": {
         "domains-system": "^4.15.0"
     },

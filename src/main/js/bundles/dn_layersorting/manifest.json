@@ -1,6 +1,6 @@
 {
     "name": "dn_layersorting",
-    "version": "1.0.0",
+    "version": "1.0.1-SNAPSHOT",
     "dependencies": {
         "esri": "^4.15.0",
         "apprt-core": "^4.15.0",
