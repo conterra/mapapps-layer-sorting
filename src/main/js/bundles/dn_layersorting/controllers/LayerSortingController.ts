@@ -75,6 +75,10 @@ export class LayerSortingController {
         const rootLayers: __esri.Layer[] = [];
 
         availableLayers.items.forEach((layer: __esri.Layer | __esri.GroupLayer) => {
+            if (layer.type === "feature") {
+                idToLayerMapping.set(layer.id, layer);
+            }
+
             if (layer.type === 'group') {
                 idToGroupMapping.set(layer.id, layer as __esri.GroupLayer);
                 idToLayerMapping.set(layer.id, layer);
@@ -195,7 +199,7 @@ export class LayerSortingController {
 
         if (layer.parent && 'layers' in layer.parent) {
             (layer.parent as __esri.GroupLayer).layers.remove(layer);
-            if (layer.parent.layers.length === 0) {
+            if (layer.parent?.layers?.length === 0) {
                 map.layers.remove(layer.parent);
             }
         } else if (layer.parent && 'sublayers' in layer.parent) {
