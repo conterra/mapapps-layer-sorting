@@ -117,6 +117,31 @@ To move a layer to a different group layer:
 
 This moves `my_layer` into the `target_group` group layer and sets its order to 3 within that group.
 
+#### Creating new Groups
+```json
+{
+    "dn_layersorting": {
+        "Config": {
+            "bundleOrderConfiguration": [
+                {
+                    "id": "new_group",
+                    "order": 20,
+                    "newParentId": "koeln2"
+                },
+                {
+                    "id": "layer1",
+                    "order": 1,
+                    "newParentId": "new_group"
+                }
+            ]
+        }
+    }
+}
+```
+Groups must first be created before being filled with layers.
+When creating new groups "order" and "newPartentId" are optional.
+"order" is required when sorting into a parent with order values. This is also valid for the root.
+
 #### Domain bundle content control
 
 To control which domain bundles should display their content:
