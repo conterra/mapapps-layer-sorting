@@ -83,6 +83,9 @@ describe('LayerSortingController', () => {
             },
             forEach: function(callback: any) {
                 this.items.forEach(callback);
+            },
+            sort: function(compareFn: any) {
+                this.items.sort(compareFn);
             }
         };
     }
