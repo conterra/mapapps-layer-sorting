@@ -116,6 +116,8 @@ export class LayerSortingController {
                 }
                 rootLayers.push(layer);
             }
+
+            layer._wasRestructured = true;
         });
 
         this.addNewGroupsWithoutParentToRoot(createdParentGroupsMapping, layerConfig, rootLayers);
@@ -127,11 +129,11 @@ export class LayerSortingController {
 
         this.getFlattenLayers(map.layers).forEach((layer: __esri.Layer) => {
             const extendedLayer = layer as __esri.Layer & {
-                wasRestructured?: boolean;
+                _wasRestructured?: boolean;
                 _sourceDomainBundle?: string;
             };
             if (
-                extendedLayer?.wasRestructured ||
+                extendedLayer?._wasRestructured ||
                 !extendedLayer?._sourceDomainBundle ||
                 domainConfig[extendedLayer?._sourceDomainBundle] === true
             ) return;
@@ -193,7 +195,6 @@ export class LayerSortingController {
 
         let parentGroup = idToGroupMapping.get(entry?.newParentId);
         if (!parentGroup) {
-            // Create missing parent group
             parentGroup = this.createGroupLayer(entry.newParentId!);
         }
 
@@ -208,12 +209,11 @@ export class LayerSortingController {
             map.layers.remove(layer);
         }
 
-        const children = parentGroup.layers.toArray();
-        children.push(layer);
-        parentGroup.layers.removeAll();
-        children.forEach(child => {
-            parentGroup.layers.add(child, this.getOrder(child, layerConfig, children));
-        });
+        parentGroup.layers.add(layer);
+        parentGroup.layers.sort(
+            (a, b) =>
+                this.getOrder(a, layerConfig, parentGroup.layers) - this.getOrder(b, layerConfig, parentGroup.layers)
+        );
     }
 
     private getOrder(layer: __esri.Layer, layerConfig: LayerConfig[], children: __esri.Layer[]): number {
@@ -254,6 +254,7 @@ export class LayerSortingController {
         });
     }
 
+    //TODO Do not remove layers initially
     private handleRootLayers(map: __esri.Map, layerConfig: LayerConfig[], rootLayers: __esri.GroupLayer[]) {
         // Add root layers to map (only new ones or ones that need reordering)
         const currentRootLayers = map.layers.toArray();
