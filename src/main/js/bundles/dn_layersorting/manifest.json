@@ -1,6 +1,6 @@
 {
     "name": "dn_layersorting",
-    "version": "1.1.1-SNAPSHOT",
+    "version": "1.2.0",
     "dependencies": {
         "@arcgis/core": "^4.33.0",
         "apprt-core": "^4.20.0",
