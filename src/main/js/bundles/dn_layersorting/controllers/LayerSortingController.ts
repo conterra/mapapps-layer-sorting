@@ -14,7 +14,7 @@
 /// limitations under the License.
 ///
 
-import GroupLayer from "esri/layers/GroupLayer";
+import GroupLayer from "@arcgis/core/layers/GroupLayer";
 
 import type { InjectedReference } from "apprt-core/InjectedReference";
 import type { LayerConfig, DomainBundleConfig } from "../api";
