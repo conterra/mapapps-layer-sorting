@@ -18,13 +18,13 @@
                         "id": "domain_2_layer_1",
                         "title": "Domain 2 Layer 1",
                         "type": "AGS_FEATURE",
-                        "url": "https://services.conterra.de/arcgis/rest/services/common/grenzen/FeatureServer/2"
+                        "url": "https://services.conterra.de/server/rest/services/mapapps/grenzen/FeatureServer/2"
                     },
                     {
                         "id": "domain_2_layer_2",
                         "title": "Domain 2 Layer 2",
                         "type": "AGS_FEATURE",
-                        "url": "https://services.conterra.de/arcgis/rest/services/common/grenzen/FeatureServer/1",
+                        "url": "https://services.conterra.de/server/rest/services/mapapps/grenzen/FeatureServer/1",
                         "definitionExpression": "land_nr = 5"
                     }
                 ]
