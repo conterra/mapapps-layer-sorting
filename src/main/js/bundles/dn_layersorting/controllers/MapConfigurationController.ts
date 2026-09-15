@@ -35,13 +35,7 @@ export class MapConfigurationController {
                 throw new Error("Map is not available in the view.");
             }
 
-            // Real ArcGIS API layer collections expose toArray()
-            if (typeof (map.layers as any).toArray === 'function') {
-                return map.layers.toArray();
-            }
-
-            // Fallback for mocks that only implement toJSON()
-            return (map.layers as any).toJSON();
+            return map.layers.toArray();
         });
     }
 
