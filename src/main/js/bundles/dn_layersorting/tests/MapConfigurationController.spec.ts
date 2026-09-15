@@ -34,8 +34,8 @@ describe('MapConfigurationController', () => {
         };
     }
 
-    it('should resolve with map layers JSON if view and map are available', async () => {
-        const mockLayers = { toJSON: () => [{ id: 'layer1' }] };
+    it('should resolve with map layers if view and map are available', async () => {
+        const mockLayers = { toArray: () => [{ id: 'layer1' }] };
         const mockMap = { layers: mockLayers };
         const mockView = { map: mockMap };
         const controller = new MapConfigurationController(createMockMapWidgetModel(mockView));
